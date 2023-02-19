@@ -1,0 +1,74 @@
+boolean send=false;
+import processing.serial.*;
+Serial myPort;
+void setup(){
+  size(400,170); 
+  PImage titlebaricon = loadImage("icon.png");
+surface.setIcon(titlebaricon);
+  printArray(Serial.list());
+  myPort = new Serial(this,Serial.list()[0], 9600);
+}
+boolean Pr(int Mx, int My, int x1, int y1, int x2, int y2, boolean Pr) {
+  return Mx>x1 & Mx<x2 & My>y1 & My<y2 & Pr;
+}
+boolean btn(boolean a,boolean b){
+if ((!b)&a) b=true; 
+else if (b&a) b=false; 
+return b;
+}
+boolean[][] tb=new boolean[3][2];
+String[][] rgbs={{"","",""},{"","",""},{"","",""}};
+boolean start=false;
+void draw() {
+ int Mx=mouseX;
+ int My=mouseY;
+ boolean Pr=mousePressed;
+ if (Pr) delay(200);
+ background(120,120,120);
+ int i;
+ char[] rgb={'R','G','B'};
+ int i1;
+ for (i1=0;i1<2;i1++){
+   for (i=0;i<3;i++){
+     tb[i][i1]=btn(Pr(Mx,My,30+i*80,30+i1*60,80*(1+i),70+i1*60,Pr),tb[i][i1]);
+     fill(155,100,100);
+     if (tb[i][i1]) {
+       fill(100,155,100);
+       if (keyPressed&(rgbs[i][i1].length()<3)&(key!=BACKSPACE)){
+       rgbs[i][i1]+=key;
+       delay(80);
+     }
+     if (keyPressed&(rgbs[i][i1].length()>=1)&(key==BACKSPACE)){
+       rgbs[i][i1]=rgbs[i][i1].substring(0, rgbs[i][i1].length()-1);
+       delay(80);
+       }
+     }
+     rect(30+i*80,30+i1*60,50,40);
+     fill(120,120,120);
+     rect(35+i*80,35+i1*60,40,30);
+     fill(160,160,160);
+     textSize(26);
+     text(rgb[i]+": "+rgbs[i][i1],8+i*80,60+i1*60);
+     text(str(i1+1),250,60+i1*60);
+   }
+ }
+ start=btn(Pr(Mx,My,260,30,340,70,Pr),start);
+ fill(100,155,100);
+ if (!start) {
+   fill(155,100,100);
+ }
+ rect(300,30,80,40);
+ send=Pr(Mx,My,260,90,340,130,Pr);
+ fill(100,155,100);
+ if (!send) {
+   fill(155,100,100);
+ }
+ rect(300,90,80,40);
+ fill(160,160,160);
+ text("START",305,60);
+ text("SEND",310,120);
+  if (send) {
+   println(str(int(start))+";"+rgbs[0][0]+";"+rgbs[1][0]+";"+rgbs[2][0]+";"+rgbs[0][1]+";"+rgbs[1][1]+";"+rgbs[2][1]+";");
+   myPort.write(str(int(start))+";"+rgbs[0][0]+";"+rgbs[1][0]+";"+rgbs[2][0]+";"+rgbs[0][1]+";"+rgbs[1][1]+";"+rgbs[2][1]+";");
+ }
+}
