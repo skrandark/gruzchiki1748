@@ -1,0 +1,140 @@
+bool start=false;
+String b="";
+int out[9];
+int c1=0;
+int GT=0;
+int Lt=0;
+int Sp=5;
+int dir=4;
+int count=0;
+int Echo=9;
+int trig=2;
+int freq=0;
+int pinS0=10;
+int pinS1=12;
+int pinS2=6;
+int pinS3=11;
+int pinOut=7;
+int R=0;
+int G=0;
+int B=0;
+#include <SoftwareSerial.h>
+#include <Servo.h>
+#include <CustomStepper.h>
+Servo myServo;
+SoftwareSerial mySerial(0, 1);
+void setup() {
+  pinMode(Sp,OUTPUT);
+  pinMode(dir,OUTPUT);
+  myServo.attach(8);
+  myServo.write(90);
+  delay(200);
+  pinMode(0,INPUT);
+  pinMode(1,OUTPUT);
+  pinMode(Echo,INPUT);
+  pinMode(trig,OUTPUT);
+  pinMode(pinS0, 1);
+  pinMode(pinS1, 1);
+  pinMode(pinS2, 1);
+  pinMode(pinS3, 1);
+  pinMode(pinOut, 0);
+  Serial.begin(9600);
+  mySerial.begin(9600);
+  Serial.setTimeout(1);
+  digitalWrite(pinS0,1);
+  digitalWrite(pinS1,0);
+  digitalWrite(dir,LOW);
+}
+
+void loop() {
+  if (mySerial.available())
+  {
+  String st=mySerial.readString();
+  
+  Serial.println(st);
+  count=0;
+  int i;
+  for (i=0;i<st.length();i++)
+  {
+    if (st[i]==';')
+    {
+    out[count]=b.toInt();
+    b="";
+    count=count+1;
+    } else b+=st[i];
+  }
+  Serial.print("<");
+  int b;
+  for (b = 0; b < 9; b++) {
+    Serial.print(out[b]);
+    Serial.print(";");
+  }
+  Serial.print(">");
+  }
+  if (out[0]==1)
+  {
+    int duration, mm;
+    digitalWrite(2, LOW);
+    delayMicroseconds(10);
+    digitalWrite(2, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(2,LOW);
+    duration = pulseIn(Echo, HIGH);
+    mm=duration*0.001*340*0.5;
+    delay(100);
+    if (mm<70)
+    {
+      analogWrite(Sp,0);
+      Lt++;
+      digitalWrite(pinS2,1);
+      digitalWrite(pinS3,1);
+      freq = pulseIn(pinOut, 0);
+      delay(150);
+      R=freq;
+      digitalWrite(pinS2,0);
+      digitalWrite(pinS3,1);
+      freq = pulseIn(pinOut, 0);
+      delay(150);
+      G=freq;
+      digitalWrite(pinS2,0);
+      digitalWrite(pinS3,0);
+      freq = pulseIn(pinOut, 0);
+      delay(150);
+      B=freq;
+      int c;
+      for (c=0;c<2;c++)
+      {
+        if ((abs(out[c*3+1]-R)<10) and (abs(out[c*3+2]-G)<10) and (abs(out[c*3+3]-B)<10)) 
+        {
+          c1=c+1;
+        }
+      }
+      if (Lt>15)
+      {
+        analogWrite(Sp,150);
+        delay(10);
+        if (c1==1) {
+          myServo.write(250);
+          delay(500);
+          c1=0;
+        }
+        if (c1==2) 
+        {
+          myServo.write(0);
+          delay(500);
+          c1=0;
+        }
+        if (c1==0) 
+        {
+        myServo.write(90);
+        delay(500);
+        }
+      }
+    }
+    else{
+    Lt=0;
+    analogWrite(Sp,95);    
+    }
+  }
+  else analogWrite(Sp,0);
+}
